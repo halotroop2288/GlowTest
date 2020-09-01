@@ -38,3 +38,4 @@ out/
 
 # gradle
 !gradle-wrapper.jar
+.idea/
