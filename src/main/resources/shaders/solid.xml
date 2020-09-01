@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root>
-	<pass name="solid">
-		<shader stage="vertex">
-			<source language="GLSL">
-				<![CDATA[
+    <pass name="solid">
+        <shader stage="vertex">
+            <source language="GLSL">
+                <![CDATA[
 					#version 150
 					
 					//material
@@ -69,14 +69,14 @@
 						gl_Position = viewMatrix * modelMatrix * position;
 					}
 				]]>
-			</source>
-			<nodes>
-				<!-- Nodes which can be used to generate the GLSL source go here -->
-			</nodes>
-		</shader>
-		<shader stage="fragment">
-			<source language="GLSL">
-				<![CDATA[
+            </source>
+            <nodes>
+                <!-- Nodes which can be used to generate the GLSL source go here -->
+            </nodes>
+        </shader>
+        <shader stage="fragment">
+            <source language="GLSL">
+                <![CDATA[
 					#version 150
 					
 					uniform sampler2D materialDiffuseTexture;
@@ -101,10 +101,10 @@
 						gl_FragColor = fragColor;
 					}
 				]]>
-			</source>
-			<nodes>
-				<!-- ditto -->
-			</nodes>
-		</shader>
-	</pass>
- </root>
+            </source>
+            <nodes>
+                <!-- ditto -->
+            </nodes>
+        </shader>
+    </pass>
+</root>
