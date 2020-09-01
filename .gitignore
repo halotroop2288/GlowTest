@@ -34,6 +34,7 @@ build/
 .settings
 bin/
 run/
+out/
 
 # gradle
 !gradle-wrapper.jar
