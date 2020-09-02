@@ -10,19 +10,16 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 public class ControlsHandler {
+	private static final double SPEED_FORWARD = 0.2;
+	private static final double SPEED_RUN = 0.6;
+	private static final double SPEED_LIMIT = SPEED_FORWARD;
+	private static final double SPEED_LIMIT_RUN = SPEED_RUN;
+	private static final double SPEED_STRAFE = 0.15;
 	public static MouseLook mouseLook = new MouseLook();
 	public static ControlSet movementControls = new ControlSet();
 	static int mouseX = 0;
 	static int mouseY = 0;
 	static boolean grab = false;
-	
-	private static final double SPEED_FORWARD = 0.2;
-	private static final double SPEED_RUN = 0.6;
-	
-	private static final double SPEED_LIMIT = SPEED_FORWARD;
-	private static final double SPEED_LIMIT_RUN = SPEED_RUN;
-	
-	private static final double SPEED_STRAFE = 0.15;
 	
 	public static void handleControls() {
 		if (MasterRenderer.windowSizeDirty) {
@@ -107,14 +104,14 @@ public class ControlsHandler {
 				if (lookedAt != null) {
 					Vector3d voxelCenter = new Vector3d();
 					collision.getVoxelCenter(voxelCenter);
-					GlowTest.getChunkManager().setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z, Blocks.BLOCK_AIR, GlowTest.scheduler);
+					GlowTest.getChunkManager().setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z, Blocks.BLOCK_AIR, MasterRenderer.scheduler);
 				}
 			} else if (ControlsHandler.movementControls.isActive("activate")) {
 				ControlsHandler.movementControls.lock("activate");
 				if (lookedAt != null) {
 					Vector3d voxelCenter = new Vector3d();
 					collision.getVoxelCenter(voxelCenter).add(collision.getHitNormal());
-					GlowTest.getChunkManager().setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z, Blocks.BLOCK_ORANGE, GlowTest.scheduler);
+					GlowTest.getChunkManager().setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z, Blocks.BLOCK_ORANGE, MasterRenderer.scheduler);
 				}
 			}
 		}

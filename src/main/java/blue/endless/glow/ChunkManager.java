@@ -6,14 +6,16 @@ import com.playsawdust.chipper.glow.voxel.VoxelShape;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.joml.Vector3i;
+import org.lwjgl.stb.STBPerlin;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 public class ChunkManager implements Destroyable {
+	static final ArrayList<Vector3i> pendingChunkList = new ArrayList<>();
 	private static final int maxRenderDist = 32; //Just over 2GiB used for chunk management at 2,197,000 bytes
-	
 	private final int renderDist = 12;
 	private final int mapSize = renderDist * 2 + 1;
 	
@@ -22,6 +24,58 @@ public class ChunkManager implements Destroyable {
 	private int xofs = 0;
 	private int yofs = 0;
 	private int zofs = 0;
+	
+	static void bakeOne() {
+		boolean allEmpty = true;
+		
+		while (allEmpty && !pendingChunkList.isEmpty()) {
+			Vector3i chunkPos = pendingChunkList.remove(0);
+			if (chunkPos.x < 0 || chunkPos.y < 0 || chunkPos.z < 0)
+				return; //Skip negative positions, this is a quick and dirty game
+			Chunk chunk = Chunk.create();
+			chunk.setPosition(new Vector3d(chunkPos.x * 32.0, chunkPos.y * 32.0, chunkPos.z * 32.0));
+			//System.out.println("Added chunk at "+chunk.getPosition(null));
+			generateInto(chunk);
+			GlowTest.getChunkManager().set(chunkPos.x, chunkPos.y, chunkPos.z, chunk);
+			if (!chunk.isEmpty()) {
+				allEmpty = false;
+				chunk.bake(MasterRenderer.scheduler);
+				MasterRenderer.scene.addActor(chunk);
+			} // else { /*Do stuff*/}
+		}
+	}
+	
+	private static void generateInto(Chunk chunk) {
+		//Preload the palette
+		chunk.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
+		chunk.setBlock(0, 0, 0, Blocks.BLOCK_STONE);
+		chunk.setBlock(0, 0, 0, Blocks.BLOCK_GRASS);
+		chunk.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
+		
+		if (chunk.getY() > 128) return;
+		
+		//TODO: We could accelerate this considerably by intentionally setting the patch palette and then filling in integers directly
+		for (int z = 0; z < 32; z++) {
+			for (int x = 0; x < 32; x++) {
+				int wx = x + chunk.getX();
+				int wz = z + chunk.getZ();
+				int wy = chunk.getY();
+				
+				int terrainHeight = (int) (STBPerlin.stb_perlin_ridge_noise3(wx * 0.003f, 0, wz * 0.003f, 2.0f, 0.5f, 1.0f, 3) * 128.0 + 8.0);
+				
+				Block surface = (terrainHeight > 64) ? Blocks.BLOCK_STONE : Blocks.BLOCK_GRASS;
+				Block interior = Blocks.BLOCK_STONE;
+				
+				for (int y = 0; y < 32; y++) {
+					if (wy + y > terrainHeight) break;
+					
+					Block cur = (wy + y < terrainHeight - 32) ? interior : surface;
+					
+					if (wy + y <= terrainHeight) chunk.setBlock(x, y, z, cur);
+				}
+			}
+		}
+	}
 	
 	public void resize(int renderDist) {
 		int newMapSize = renderDist * 2 + 1;

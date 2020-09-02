@@ -1,5 +1,6 @@
 package blue.endless.glow;
 
+import com.playsawdust.chipper.glow.RenderScheduler;
 import com.playsawdust.chipper.glow.Window;
 import com.playsawdust.chipper.glow.gl.Texture;
 import com.playsawdust.chipper.glow.gl.shader.ShaderProgram;
@@ -19,9 +20,9 @@ import java.util.Objects;
 public class MasterRenderer {
 	public static final BufferedImage MISSINGNO;
 	public static boolean windowSizeDirty = false;
-	public static int windowWidth = 0;
-	public static int windowHeight = 0;
+	public static int windowWidth, windowHeight;
 	public static Scene scene = new Scene();
+	public static RenderScheduler scheduler = RenderScheduler.createDefaultScheduler();
 	static ShaderProgram shaderProg;
 	static Window window;
 	
@@ -53,13 +54,13 @@ public class MasterRenderer {
 	
 	public static Texture loadTexture(String fileName, String id) {
 		Texture texture = Texture.of(loadImage(fileName));
-		GlowTest.scheduler.registerTexture(id, texture);
+		scheduler.registerTexture(id, texture);
 		return texture;
 	}
 	
 	public static Texture loadTexture(String id, BufferedImage image) {
 		Texture texture = Texture.of(image);
-		GlowTest.scheduler.registerTexture(id, texture);
+		scheduler.registerTexture(id, texture);
 		return texture;
 	}
 	
@@ -101,10 +102,15 @@ public class MasterRenderer {
 	}
 	
 	public static void render() {
-		scene.render(GlowTest.scheduler, shaderProg);
+		scene.render(scheduler, shaderProg);
 		
 		GLFW.glfwSwapBuffers(MasterRenderer.window.handle());
 		
 		GLFW.glfwPollEvents();
+	}
+	
+	public static void destroy() {
+		scheduler.destroy();
+		shaderProg.destroy();
 	}
 }

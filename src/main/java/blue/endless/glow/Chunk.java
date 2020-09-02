@@ -201,6 +201,10 @@ public class Chunk implements Destroyable, Actor {
 		this.position.set(position);
 	}
 	
+	public void setPosition(int x, int y, int z) {
+		this.position.set(new Vector3d(x, y, z));
+	}
+	
 	@Override
 	public void setOrientation(Matrix3dc orientation) {
 		//no.
