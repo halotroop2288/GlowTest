@@ -11,7 +11,6 @@ import org.lwjgl.stb.STBPerlin;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 public class ChunkManager implements Destroyable {
 	static final ArrayList<Vector3i> pendingChunkList = new ArrayList<>();
@@ -103,7 +102,7 @@ public class ChunkManager implements Destroyable {
 		}
 		
 		//TODO: Destroy old chunks
-		Arrays.fill(chunks, null); //May be unnecessary but it helps the GC to untangle fewer refs
+		Arrays.fill(chunks, null); // May be unnecessary but it helps the GC to untangle fewer refs
 		chunks = newChunks;
 		xofs += dx;
 		yofs += dy;
@@ -125,20 +124,20 @@ public class ChunkManager implements Destroyable {
 	}
 	
 	
-	public void scheduleAll(List<Vector3i> list) {
+	public void scheduleAll() {
 		for (int y = 0; y < mapSize; y++) {
 			for (int z = 0; z < mapSize; z++) {
 				for (int x = 0; x < mapSize; x++) {
 					int ofs = chunkCoordOfs(x + xofs, y + yofs, z + zofs);
 					if (ofs != -1) {
 						if (chunks[ofs] == null) {
-							list.add(new Vector3i(x + xofs, y + yofs, z + zofs));
+							pendingChunkList.add(new Vector3i(x + xofs, y + yofs, z + zofs));
 						}
 					}
 				}
 			}
 		}
-		list.sort(getCenterComparator());
+		pendingChunkList.sort(getCenterComparator());
 	}
 	
 	//public void getSchedulableChunks<List<Chunk> list) {

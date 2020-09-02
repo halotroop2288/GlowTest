@@ -3,7 +3,10 @@ package blue.endless.glow;
 import com.playsawdust.chipper.glow.RenderScheduler;
 import com.playsawdust.chipper.glow.Window;
 import com.playsawdust.chipper.glow.gl.Texture;
+import com.playsawdust.chipper.glow.gl.shader.ShaderError;
+import com.playsawdust.chipper.glow.gl.shader.ShaderIO;
 import com.playsawdust.chipper.glow.gl.shader.ShaderProgram;
+import com.playsawdust.chipper.glow.pass.MeshPass;
 import com.playsawdust.chipper.glow.scene.Light;
 import com.playsawdust.chipper.glow.scene.Scene;
 import org.joml.Vector2d;
@@ -15,6 +18,7 @@ import org.lwjgl.opengl.GL20;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Objects;
 
 public class MasterRenderer {
@@ -112,5 +116,22 @@ public class MasterRenderer {
 	public static void destroy() {
 		scheduler.destroy();
 		shaderProg.destroy();
+	}
+	
+	public static ShaderProgram loadShaderProgram(String passName) {
+		ShaderProgram program = null;
+		
+		try {
+			InputStream shaderStream = GlowTest.class.getClassLoader()
+					.getResourceAsStream("shaders/" + passName + ".xml");
+			program = ShaderIO.load(shaderStream);
+			MeshPass pass = (MeshPass) scheduler.getPass(passName);
+			pass.setShader(program);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ShaderError e) {
+			System.err.println(e.getInfoLog());
+		}
+		return program;
 	}
 }

@@ -1,14 +1,9 @@
 package blue.endless.glow;
 
 import com.playsawdust.chipper.glow.gl.Texture;
-import com.playsawdust.chipper.glow.gl.shader.ShaderError;
-import com.playsawdust.chipper.glow.gl.shader.ShaderIO;
-import com.playsawdust.chipper.glow.pass.MeshPass;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 
 public class GlowTest {
 	public static final double SIXTY_DEGREES = 60.0 * (Math.PI / 180.0);
@@ -22,20 +17,12 @@ public class GlowTest {
 		
 		ControlsHandler.setupStage2();
 		
-		try {
-			InputStream shaderStream = GlowTest.class.getClassLoader().getResourceAsStream("shaders/solid.xml");
-			MasterRenderer.shaderProg = ShaderIO.load(shaderStream);
-			MeshPass solidPass = (MeshPass) MasterRenderer.scheduler.getPass("solid");
-			solidPass.setShader(MasterRenderer.shaderProg);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			exit(true);
-		} catch (ShaderError err) {
-			System.err.println(err.getInfoLog());
-			exit(true);
-		}
+		MasterRenderer.shaderProg = MasterRenderer.loadShaderProgram("solid");
 		
-		if (MasterRenderer.shaderProg == null) return;
+		if (MasterRenderer.shaderProg == null) {
+			exit(true);
+			return;
+		}
 		
 		/* Bake Models into BakedModels */
 		
@@ -48,7 +35,7 @@ public class GlowTest {
 		Texture grassTex = MasterRenderer.loadTexture("grass", "grassDiffuse");
 		
 		/* Setup the Scene */
-		GlowTest.getChunkManager().scheduleAll(ChunkManager.pendingChunkList);
+		GlowTest.getChunkManager().scheduleAll();
 		
 		MasterRenderer.setupStage2();
 		
@@ -67,6 +54,7 @@ public class GlowTest {
 		
 		exit(false);
 	}
+	
 	
 	public static void exit(boolean error) {
 		MasterRenderer.destroy();
