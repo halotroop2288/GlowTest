@@ -62,7 +62,7 @@ public class Chunk implements Destroyable, Actor {
 		modelLods.add(model);
 		
 		VoxelPatch lod = patch.getLoD();
-		allLossless &= lod.isLossless();
+		allLossless = lod.isLossless(); // &=
 		Model lodModel = VoxelMesher.mesh(0, 0, 0, 16, 16, 16, lod::getShape, lod::getMaterial, 2);
 		if (lodModel.isEmpty()) {
 			modelDirty = false;

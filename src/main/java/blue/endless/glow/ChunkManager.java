@@ -111,7 +111,9 @@ public class ChunkManager implements Destroyable {
 		int ofs = chunkCoordOfs(chunkX, chunkY, chunkZ);
 		if (ofs == -1) return;
 		Chunk chunk = chunks[ofs];
-		if (chunk == null) return;
+		if (chunk == null) {
+			chunk = Chunk.create();
+		}
 		chunk.setBlock(x % 32, y % 32, z % 32, block);
 		chunk.mesh();
 		chunk.bake(scheduler);
