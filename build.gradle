@@ -2,39 +2,43 @@ apply plugin: 'java'
 
 group = 'com.playsawdust.chipper'
 archivesBaseName = 'GlowTest'
-version = '0.0.1'
+version = '0.1.0'
 
 repositories {
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-    maven { url "https://jitpack.io" }
-}
-
-
-def lwjgl(String... modules) {
-    def ver = '3.2.4-SNAPSHOT'
-    def platforms = ['linux', 'macos', 'windows']
-
-    def rtrn = []
-    rtrn.add(dependencies.create("org.lwjgl:lwjgl:${ver}"))
-    modules.each { module ->
-        rtrn.add(dependencies.create("org.lwjgl:lwjgl-${module}:${ver}"))
-    }
-    platforms.each { platform ->
-        rtrn.add(dependencies.create("org.lwjgl:lwjgl:${ver}:natives-${platform}"))
-        modules.each { module ->
-            rtrn.add(dependencies.create("org.lwjgl:lwjgl-${module}:${ver}:natives-${platform}"))
-        }
-    }
-    return rtrn
+    maven { url "http://maven.modmuss50.me/"} // Zoestria Config
+    maven { url "https://jitpack.io/" } // Github-only libraries
 }
 
 dependencies {
-    //glow
-    compile 'com.google.guava:guava:28.2-jre'
+    // Lightweight Java Game Library
+    compile lwjgl ('glfw', 'openal', 'opengl', 'stb')
+    compile       ("org.joml:joml:1.9.12")
 
-    compile lwjgl('glfw', 'openal', 'opengl', 'stb')
-    compile 'org.joml:joml:1.9.12'
+    compile       ("com.google.guava:guava:28.2-jre")
+    compile       ("com.google.code.findbugs:jsr305:3.0.2")
 
-    implementation 'com.github.playsawdust:Glow:cf3c248'
+    implementation("tk.valoeghese:ZoesteriaConfig:1.3.4")  // Configuration library
+//    implementation("com.github.valoeghese:SOD-Java:2.1.1") // Save format library // FIXME this won't load for some reason
+
+    implementation("com.github.playsawdust:Glow:dfba54b")  // Render engine
+}
+
+def lwjgl(String... modules) {
+    def ver = project.lwjgl_version
+    def platforms = ['linux', 'windows'] // lol screw MacOS
+
+    def libs = []
+    libs.add(dependencies.create("org.lwjgl:lwjgl:${ver}"))
+    modules.each { module ->
+        libs.add(dependencies.create("org.lwjgl:lwjgl-${module}:${ver}"))
+    }
+    platforms.each { platform ->
+        libs.add(dependencies.create("org.lwjgl:lwjgl:${ver}:natives-${platform}"))
+        modules.each { module ->
+            libs.add(dependencies.create("org.lwjgl:lwjgl-${module}:${ver}:natives-${platform}"))
+        }
+    }
+    return libs
 }

@@ -1,6 +1,5 @@
-package blue.endless.glow;
+package com.halotroop.brightcraft;
 
-import com.playsawdust.chipper.glow.RenderScheduler;
 import com.playsawdust.chipper.glow.gl.BakedModel;
 import com.playsawdust.chipper.glow.gl.shader.Destroyable;
 import com.playsawdust.chipper.glow.mesher.VoxelMesher;
@@ -108,7 +107,7 @@ public class Chunk implements Destroyable, Actor {
 		modelDirty = false;
 	}
 	
-	public void bake(RenderScheduler scheduler) {
+	public void bake() {
 		if (modelDirty) mesh();
 		
 		if (empty) {
@@ -119,7 +118,7 @@ public class Chunk implements Destroyable, Actor {
 		for (BakedModel m : bakedLods) m.destroy();
 		bakedLods.clear();
 		for (Model m : modelLods) {
-			bakedLods.add(scheduler.bake(m));
+			bakedLods.add(MasterRenderer.scheduler.bake(m));
 		}
 		modelLods.clear();
 		modelDirty = true;

@@ -4,8 +4,8 @@ AKA ***[Litecraft](https://github.com/halotroop/LiteCraft): Take 3***
 
 AKA ***Codename: BrightCraft***
 
-A fork of @Falkreon's [GlowTest](https://github.com/falkreon/GlowTest)
-(Thanks, man! I hate writing the basics!),
+A fork of [@falkreon's](https://github.com/falkreon) [GlowTest](https://github.com/falkreon/GlowTest).
+(Thanks, man! I hate writing the basics!)
 
 ## Goals
  - Work **alone** on a project for once in my life
@@ -37,8 +37,8 @@ A fork of @Falkreon's [GlowTest](https://github.com/falkreon/GlowTest)
 
  # License
  This project is licensed under Mozilla Public License version 2,
- to match the license of the render engine, Glow.
+ to match the license of the render engine, [Glow](https://github.com/playsawdust/Glow).
  
- For more information, see [LICENSE]().
+ For more information, see [LICENSE](https://github.com/halotroop2288/GlowTest/blob/trunk/LICENSE).
  
  I want to use licensed music from indie artists. That will probably have its own licensing notice.

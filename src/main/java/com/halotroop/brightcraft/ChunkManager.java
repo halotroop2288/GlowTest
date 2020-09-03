@@ -1,6 +1,5 @@
-package blue.endless.glow;
+package com.halotroop.brightcraft;
 
-import com.playsawdust.chipper.glow.RenderScheduler;
 import com.playsawdust.chipper.glow.gl.shader.Destroyable;
 import com.playsawdust.chipper.glow.voxel.VoxelShape;
 import org.joml.Vector3d;
@@ -38,7 +37,7 @@ public class ChunkManager implements Destroyable {
 			GlowTest.getChunkManager().set(chunkPos.x, chunkPos.y, chunkPos.z, chunk);
 			if (!chunk.isEmpty()) {
 				allEmpty = false;
-				chunk.bake(MasterRenderer.scheduler);
+				chunk.bake();
 				MasterRenderer.scene.addActor(chunk);
 			} // else { /*Do stuff*/}
 		}
@@ -157,7 +156,7 @@ public class ChunkManager implements Destroyable {
 		return block.getShape();
 	}
 	
-	public void setBlock(int x, int y, int z, Block block, RenderScheduler scheduler) {
+	public void setBlock(int x, int y, int z, Block block) {
 		int chunkX = x / 32;
 		int chunkY = y / 32;
 		int chunkZ = z / 32;
@@ -169,7 +168,7 @@ public class ChunkManager implements Destroyable {
 		}
 		chunk.setBlock(x % 32, y % 32, z % 32, block);
 		chunk.mesh();
-		chunk.bake(scheduler);
+		chunk.bake();
 	}
 	
 	public Comparator<Vector3i> getCenterComparator() {

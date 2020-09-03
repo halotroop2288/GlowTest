@@ -1,4 +1,4 @@
-package blue.endless.glow;
+package com.halotroop.brightcraft;
 
 import com.playsawdust.chipper.glow.model.Material;
 import com.playsawdust.chipper.glow.voxel.MeshableVoxel;
