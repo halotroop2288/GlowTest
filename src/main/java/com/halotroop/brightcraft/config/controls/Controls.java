@@ -6,4 +6,5 @@ public class Controls {
 	static DigitalButtonControl grabControl;
 	static DigitalButtonControl breakControl;
 	static DigitalButtonControl placeControl;
+	static DigitalButtonControl runControl;
 }
