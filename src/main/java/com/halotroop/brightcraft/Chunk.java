@@ -26,6 +26,14 @@ public class Chunk implements Destroyable, Actor {
 	private boolean bakeDirty = true;
 	private boolean empty = false;
 	
+	void preloadPalette() { // FIXME: Not like this...
+		//Preload the palette
+		this.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
+		this.setBlock(0, 0, 0, Blocks.BLOCK_STONE);
+		this.setBlock(0, 0, 0, Blocks.BLOCK_GRASS);
+		this.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
+	}
+	
 	public static Chunk create() {
 		Chunk result = new Chunk();
 		result.patch = new VoxelPatch();
@@ -118,7 +126,7 @@ public class Chunk implements Destroyable, Actor {
 		for (BakedModel m : bakedLods) m.destroy();
 		bakedLods.clear();
 		for (Model m : modelLods) {
-			bakedLods.add(MasterRenderer.scheduler.bake(m));
+			bakedLods.add(MotherRenderer.scheduler.bake(m));
 		}
 		modelLods.clear();
 		modelDirty = true;
@@ -186,7 +194,6 @@ public class Chunk implements Destroyable, Actor {
 		if (lod >= bakedLods.size()) lod = bakedLods.size() - 1;
 		if (lod < 0) lod = 0;
 		//int lod = (int)(chunk.getPosition(null).distanceSquared(0, 0, 0)/150_000);
-		
 		return bakedLods.get(lod);
 	}
 	

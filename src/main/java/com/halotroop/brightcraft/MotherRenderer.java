@@ -10,6 +10,7 @@ import com.playsawdust.chipper.glow.pass.MeshPass;
 import com.playsawdust.chipper.glow.scene.Scene;
 import org.joml.Matrix4d;
 import org.joml.Vector2d;
+import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -21,13 +22,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-public class MasterRenderer {
+public class MotherRenderer {
 	public static final BufferedImage MISSINGNO;
 	public static final double SIXTY_DEGREES = 60.0 * (Math.PI / 180.0);
 	public static boolean windowSizeDirty = false;
-	public static int windowWidth, windowHeight;
+	public static Vector2i windowSize = new Vector2i();
 	public static Scene scene = new Scene();
 	public static RenderScheduler scheduler = RenderScheduler.createDefaultScheduler();
+	public static int fps;
 	static ShaderProgram solidShaderProg;
 	
 	static {
@@ -87,36 +89,26 @@ public class MasterRenderer {
 		return texture;
 	}
 	
-	public static void initWindow() {
+	public static void initWindow() { // STAGE 1
 		/* Start GL, spawn up a window, load and compile the ShaderProgram, and attach it to the solid MeshPass. */
-		
 		Window.initGLFW();
 		
 		GlowTest.window = new Window(1280, 720, "GlowTest");
-		
-		GLFW.glfwMakeContextCurrent(GlowTest.window.handle());
 	}
 	
-	public static void setupStage2() throws IOException, ShaderError {
+	public static void setupStage2() throws IOException, ShaderError { // STAGE 2
+		GLFW.glfwMakeContextCurrent(GlowTest.window.handle());
 		GL.createCapabilities();
 		
 		GLFW.glfwSetFramebufferSizeCallback(GlowTest.window.handle(), (hWin, width, height) -> {
 			windowSizeDirty = true;
-			windowWidth = width;
-			windowHeight = height;
+			windowSize.set(width, height);
 		});
-		
-		if (MasterRenderer.windowSizeDirty) {
-			GL11.glViewport(0, 0, MasterRenderer.windowWidth, MasterRenderer.windowHeight);
-			Matrix4d projection = new Matrix4d();
-			projection.setPerspective(SIXTY_DEGREES, MasterRenderer.windowWidth / (double) MasterRenderer.windowHeight, 0.01, 1000);
-			MasterRenderer.scene.setProjectionMatrix(projection);
-		}
 		
 		solidShaderProg = loadShaderProgram("solid");
 	}
 	
-	public static void setupStage3() {
+	public static void setupScene() { // STAGE 3
 		/* Set the clear color, set global GL state, and start the render loop */
 		GL11.glClearColor(0.39f, 0.74f, 1.0f, 0.0f);
 		
@@ -129,8 +121,7 @@ public class MasterRenderer {
 		//Matrix4d projection = new Matrix4d();
 		Vector2d windowSize = new Vector2d();
 		GlowTest.window.getSize(windowSize);
-		windowWidth = (int) windowSize.x();
-		windowHeight = (int) windowSize.y();
+		MotherRenderer.windowSize.set(windowSize);
 		windowSizeDirty = true;
 		solidShaderProg.bind();
 		
@@ -140,15 +131,23 @@ public class MasterRenderer {
 		scene.getCamera().setPosition(32 * 4, 128, 32 * 4);
 	}
 	
+	// TODO: Count frames, put an FPS counter in the title bar
+	
 	public static void render() {
+		if (MotherRenderer.windowSizeDirty) {
+			GL11.glViewport(0, 0, windowSize.x, windowSize.y);
+			Matrix4d projection = new Matrix4d();
+			projection.setPerspective(SIXTY_DEGREES, windowSize.x / (double) windowSize.y, 0.01, 1000);
+			MotherRenderer.scene.setProjectionMatrix(projection);
+		}
+		
 		scene.render(scheduler, solidShaderProg);
 		
 		GLFW.glfwSwapBuffers(GlowTest.window.handle());
-		
-		GLFW.glfwPollEvents();
+		++fps;
 	}
 	
-	public static void destroy() {
+	public static void destroyAll() {
 		if (scheduler != null) scheduler.destroy();
 		else System.err.println("Scheduler was null!");
 		if (solidShaderProg != null) solidShaderProg.destroy();

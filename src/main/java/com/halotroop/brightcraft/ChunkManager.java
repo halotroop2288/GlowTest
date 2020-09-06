@@ -13,7 +13,7 @@ import java.util.Comparator;
 
 public class ChunkManager implements Destroyable {
 	static final ArrayList<Vector3i> pendingChunkList = new ArrayList<>();
-	private static final int maxRenderDist = 32; //Just over 2GiB used for chunk management at 2,197,000 bytes
+	private static final int maxRenderDist = 32; // Just over 2GiB used for chunk management at 2,197,000 bytes
 	private final int renderDist = 12;
 	private final int mapSize = renderDist * 2 + 1;
 	
@@ -34,21 +34,17 @@ public class ChunkManager implements Destroyable {
 			chunk.setPosition(new Vector3d(chunkPos.x * 32.0, chunkPos.y * 32.0, chunkPos.z * 32.0));
 			//System.out.println("Added chunk at "+chunk.getPosition(null));
 			generateInto(chunk);
-			GlowTest.getChunkManager().set(chunkPos.x, chunkPos.y, chunkPos.z, chunk);
+			GlowTest.chunkManager.set(chunkPos.x, chunkPos.y, chunkPos.z, chunk);
 			if (!chunk.isEmpty()) {
 				allEmpty = false;
 				chunk.bake();
-				MasterRenderer.scene.addActor(chunk);
+				MotherRenderer.scene.addActor(chunk);
 			} // else { /*Do stuff*/}
 		}
 	}
 	
 	private static void generateInto(Chunk chunk) {
-		//Preload the palette
-		chunk.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
-		chunk.setBlock(0, 0, 0, Blocks.BLOCK_STONE);
-		chunk.setBlock(0, 0, 0, Blocks.BLOCK_GRASS);
-		chunk.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
+		chunk.preloadPalette();
 		
 		if (chunk.getY() > 128) return;
 		
@@ -156,7 +152,7 @@ public class ChunkManager implements Destroyable {
 		return block.getShape();
 	}
 	
-	public void setBlock(int x, int y, int z, Block block) {
+	public void setBlock(int x, int y, int z, Block block, boolean bake) {
 		int chunkX = x / 32;
 		int chunkY = y / 32;
 		int chunkZ = z / 32;
@@ -167,8 +163,10 @@ public class ChunkManager implements Destroyable {
 			chunk = Chunk.create();
 		}
 		chunk.setBlock(x % 32, y % 32, z % 32, block);
-		chunk.mesh();
-		chunk.bake();
+		if (bake) {
+			chunk.mesh();
+			chunk.bake();
+		}
 	}
 	
 	public Comparator<Vector3i> getCenterComparator() {

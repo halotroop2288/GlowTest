@@ -1,44 +1,58 @@
-apply plugin: 'java'
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
-group = 'com.playsawdust.chipper'
-archivesBaseName = 'GlowTest'
+apply plugin: 'java'
+apply plugin: 'application'
+
+group = 'com.halotroop'
+archivesBaseName = 'BrightCraft'
 version = '0.1.0'
 
 repositories {
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-    maven { url "http://maven.modmuss50.me/"} // Zoestria Config
     maven { url "https://jitpack.io/" } // Github-only libraries
 }
 
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.halotroop.brightcraft.GlowTest'
+        )
+    }
+    exclude("**/com/halotroop/brightcraft/debug/")
+}
+
 dependencies {
+    compile       (files('README.md'))
     // Lightweight Java Game Library
-    compile lwjgl ('glfw', 'openal', 'opengl', 'stb')
+    compile lwjgl ('glfw', 'opengl', 'stb')
     compile       ("org.joml:joml:1.9.12")
 
+    // Google Libraries
     compile       ("com.google.guava:guava:28.2-jre")
     compile       ("com.google.code.findbugs:jsr305:3.0.2")
 
-    implementation("tk.valoeghese:ZoesteriaConfig:1.3.4")  // Configuration library
-//    implementation("com.github.valoeghese:SOD-Java:2.1.1") // Save format library // FIXME this won't load for some reason
+    // Game features supporting libraries
+    implementation("blue.endless:jankson:1.2.0") // Configuration save format
+    implementation("org.mongodb:bson:4.1.0") // World save format
 
+    implementation("com.github.falkreon:LibNoiseJava:260e0bb") // Noise generator
     implementation("com.github.playsawdust:Glow:dfba54b")  // Render engine
 }
 
 def lwjgl(String... modules) {
     def ver = project.lwjgl_version
-    def platforms = ['linux', 'windows'] // lol screw MacOS
+    def os = DefaultNativePlatform.currentOperatingSystem.toFamilyName()
 
     def libs = []
-    libs.add(dependencies.create("org.lwjgl:lwjgl:${ver}"))
+
+    def path = 'org.lwjgl:lwjgl'
+
+    libs.add(dependencies.create("${path}:${ver}"))
+    libs.add(dependencies.create("${path}:${ver}:natives-${os}"))
     modules.each { module ->
-        libs.add(dependencies.create("org.lwjgl:lwjgl-${module}:${ver}"))
-    }
-    platforms.each { platform ->
-        libs.add(dependencies.create("org.lwjgl:lwjgl:${ver}:natives-${platform}"))
-        modules.each { module ->
-            libs.add(dependencies.create("org.lwjgl:lwjgl-${module}:${ver}:natives-${platform}"))
-        }
+        libs.add(dependencies.create("${path}-${module}:${ver}"))
+        libs.add(dependencies.create("${path}-${module}:${ver}:natives-${os}"))
     }
     return libs
 }

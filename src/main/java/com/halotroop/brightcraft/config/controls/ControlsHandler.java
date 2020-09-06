@@ -1,9 +1,10 @@
 package com.halotroop.brightcraft.config.controls;
 
-import com.halotroop.brightcraft.Actors;
 import com.halotroop.brightcraft.Blocks;
 import com.halotroop.brightcraft.GlowTest;
-import com.halotroop.brightcraft.MasterRenderer;
+import com.halotroop.brightcraft.MotherRenderer;
+import com.halotroop.brightcraft.physics.entities.Actors;
+import com.halotroop.brightcraft.physics.entities.Player;
 import com.playsawdust.chipper.glow.control.ControlSet;
 import com.playsawdust.chipper.glow.control.MouseLook;
 import com.playsawdust.chipper.glow.scene.Collision;
@@ -12,25 +13,19 @@ import org.joml.Vector2i;
 import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Arrays;
+
 public class ControlsHandler {
-	private static final double SPEED_FORWARD = 0.2;
-	private static final double SPEED_RUN = 0.6;
-	private static final double SPEED_LIMIT = SPEED_FORWARD;
-	private static final double SPEED_LIMIT_RUN = SPEED_RUN;
-	private static final double SPEED_STRAFE = 0.15;
 	private static final Vector2i mousePos = new Vector2i();
-	public static IterableControlSet inGameControls = new IterableControlSet();
-	public static IterableControlSet uiControls = new IterableControlSet();
-	public static final IterableControlSet[] controlSets = {inGameControls, uiControls};
-	private static boolean inputGrabbed = false;
+	public static ControlSet inGameControls = new ControlSet();
+	public static ControlSet uiControls = new ControlSet();
 	public static MouseLook mouseLook = new MouseLook();
-	private static Vector3d playerVelocityVectorSum = new Vector3d();
+	private static boolean inputGrabbed = false;
 	private static Vector3d lookedAt;
 	private static CollisionResult collision;
-	private static boolean playerIsRunning;
 	
-	private static void grab() {
-		System.out.println("CONTROLS ARE GRABBED");
+	private static void toggleGrab() {
+		System.out.println("GRABBING CONTROLS");
 		Controls.grabControl.lock();
 		inputGrabbed = !inputGrabbed;
 		GLFW.glfwSetInputMode(GlowTest.window.handle(), GLFW.GLFW_CURSOR,
@@ -41,120 +36,103 @@ public class ControlsHandler {
 	 * Should be called at one specific point in the main game loop and nowhere else.
 	 */
 	public static void handleControls() { // MAIN LOOP
-		uiControls.pollAll(); // polled regardless of if the input is grabbed
-		
 		if (inputGrabbed) {
-			inGameControls.pollAll(); // polled only if input is grabbed
+			GlowTest.player.velocityVectorSum = new Vector3d();
 			
-			playerVelocityVectorSum = new Vector3d();
+			final double CUR_SPEED_LIMIT = (GlowTest.player.isRunning ? Player.SPEED_LIMIT_RUN : Player.SPEED_LIMIT);
 			
-			if (playerVelocityVectorSum.length() > (playerIsRunning ? SPEED_LIMIT_RUN : SPEED_LIMIT)) {
-				playerVelocityVectorSum.normalize().mul(playerIsRunning ? SPEED_LIMIT_RUN : SPEED_LIMIT);
+			// TODO: Move this to Player#tick!
+			if (GlowTest.player.velocityVectorSum.length() > CUR_SPEED_LIMIT) {
+				GlowTest.player.velocityVectorSum.normalize().mul(CUR_SPEED_LIMIT);
 			}
 			
-			MasterRenderer.scene.getCamera().setPosition(playerVelocityVectorSum.add(MasterRenderer.scene.getCamera().getPosition(null)));
+			MotherRenderer.scene.getCamera().setPosition(GlowTest.player.velocityVectorSum.add(MotherRenderer.scene.getCamera().getPosition(null)));
 			
-			mouseLook.step(mousePos.x, mousePos.y, MasterRenderer.windowWidth, MasterRenderer.windowHeight);
-			MasterRenderer.scene.getCamera().setOrientation(ControlsHandler.mouseLook.getMatrix());
+			mouseLook.step(mousePos.x, mousePos.y, MotherRenderer.windowSize.x, MotherRenderer.windowSize.y);
+			MotherRenderer.scene.getCamera().setOrientation(ControlsHandler.mouseLook.getMatrix());
 			
 			Vector3d lookVec = ControlsHandler.mouseLook.getLookVector(null);
 			collision = new CollisionResult();
-			lookedAt = Collision.raycastVoxel(MasterRenderer.scene.getCamera().getPosition(null), lookVec, 100, GlowTest.getChunkManager()::getShape, collision, false);
+			lookedAt = Collision.raycastVoxel(MotherRenderer.scene.getCamera().getPosition(null), lookVec, 100, GlowTest.chunkManager::getShape, collision, false);
 			if (lookedAt != null) {
 				//lookTargetActor.setPosition(collision.getHitLocation());
 				Actors.lookTargetActor.setPosition(collision.getVoxelCenter(null));
 				
 				Vector3d hitNormal = collision.getHitNormal();
 				Actors.lookTargetActor.lookAlong(hitNormal.x, hitNormal.y, hitNormal.z);
-				Actors.lookTargetActor.setRenderModel(Actors.bakedLookTarget);
+				MotherRenderer.scene.forEach(actor -> {
+					if (actor.equals(Actors.lookTargetActor)) MotherRenderer.scene.addActor(Actors.lookTargetActor);
+				});
 			} else {
-				Actors.lookTargetActor.setRenderModel(null);
+				MotherRenderer.scene.removeActor(Actors.lookTargetActor);
 			}
 		}
 	}
 	
 	public static void mapControls() { // STAGE 1
-		// TODO: Create a player class and move movement shit over there
+		System.out.println("Mapping controls");
+		
+		// UI Controls
 		Controls.grabControl = uiControls.map("grab", GLFW.GLFW_KEY_TAB);
-		Controls.grabControl.onPress().register(ControlsHandler::grab);
+		Controls.grabControl.onPress().register(ControlsHandler::toggleGrab);
 		
-		uiControls.map("graceful_exit", GLFW.GLFW_KEY_ESCAPE).onPress().register(() ->
-				GLFW.glfwSetWindowShouldClose(GlowTest.window.handle(), true));
+		// In-Game
+		uiControls.map("graceful_exit", GLFW.GLFW_KEY_ESCAPE).onRelease().register(GlowTest::naturalExit);
 		
-		inGameControls.map("forward", GLFW.GLFW_KEY_W).onPress().register(() -> {
-			Vector3d lookVec = ControlsHandler.mouseLook.getLookVector(null);
-			if (playerIsRunning) {
-				lookVec.mul(SPEED_RUN);
-			} else {
-				lookVec.mul(SPEED_FORWARD);
-			}
-			playerVelocityVectorSum.add(lookVec);
-		});
-		inGameControls.map("backward", GLFW.GLFW_KEY_S).onPress().register(() -> {
-			Vector3d lookVec = ControlsHandler.mouseLook.getLookVector(null);
-			if (playerIsRunning) {
-				lookVec.mul(-SPEED_RUN);
-			} else {
-				lookVec.mul(-SPEED_FORWARD);
-			}
-			
-			playerVelocityVectorSum.add(lookVec);
-		});
-		inGameControls.map("left", GLFW.GLFW_KEY_A).onPress().register(() -> {
-			Vector3d leftVec = ControlsHandler.mouseLook.getRightVector(null);
-			leftVec.mul(-SPEED_STRAFE);
-			
-			playerVelocityVectorSum.add(leftVec);
-		});
-		inGameControls.map("right", GLFW.GLFW_KEY_D).onPress().register(() -> {
-			Vector3d rightVec = ControlsHandler.mouseLook.getRightVector(null);
-			rightVec.mul(SPEED_STRAFE);
-			
-			playerVelocityVectorSum.add(rightVec);
-		});
+		inGameControls.map("forward", GLFW.GLFW_KEY_W).onPress().register(
+				() -> GlowTest.player.handleMovement(Player.MovementDirection.FORWARD));
+		
+		inGameControls.map("backward", GLFW.GLFW_KEY_S).onPress().register(
+				() -> GlowTest.player.handleMovement(Player.MovementDirection.BACKWARD));
+		
+		inGameControls.map("left", GLFW.GLFW_KEY_A).onPress().register(
+				() -> GlowTest.player.handleMovement(Player.MovementDirection.LEFT));
+		
+		inGameControls.map("right", GLFW.GLFW_KEY_D).onPress().register(
+				() -> GlowTest.player.handleMovement(Player.MovementDirection.RIGHT));
 		
 		Controls.runControl = inGameControls.map("run", GLFW.GLFW_KEY_LEFT_SHIFT);
-		Controls.runControl.onPress().register(() -> playerIsRunning = true);
-		Controls.runControl.onRelease().register(() -> playerIsRunning = false);
+		Controls.runControl.onPress().register(() -> GlowTest.player.isRunning = true);
+		Controls.runControl.onRelease().register(() -> GlowTest.player.isRunning = false);
 		
 		Controls.breakControl = inGameControls.mapMouse("break", GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		Controls.placeControl = inGameControls.mapMouse("place", GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+		
 		Controls.breakControl.onPress().register(() -> {
 			Controls.breakControl.lock();
 			if (lookedAt != null) {
-				Vector3d voxelCenter = new Vector3d();
-				collision.getVoxelCenter(voxelCenter);
-				GlowTest.getChunkManager().setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z,
-						Blocks.BLOCK_AIR);
+				Vector3d blockPos = new Vector3d();
+				collision.getVoxelCenter(blockPos);
+				GlowTest.chunkManager.setBlock((int) blockPos.x, (int) blockPos.y, (int) blockPos.z,
+						Blocks.BLOCK_AIR, true);
 			}
 		});
+		
 		Controls.placeControl.onPress().register(() -> {
 			if (!Controls.breakControl.isActive()) {
 				ControlsHandler.inGameControls.lock("activate");
 				if (lookedAt != null) {
 					Vector3d voxelCenter = new Vector3d();
 					collision.getVoxelCenter(voxelCenter).add(collision.getHitNormal());
-					GlowTest.getChunkManager().setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z,
-							Blocks.BLOCK_ORANGE);
+					GlowTest.chunkManager.setBlock((int) voxelCenter.x, (int) voxelCenter.y, (int) voxelCenter.z,
+							Blocks.BLOCK_ORANGE, true);
 				}
 			}
 		});
-	}
-	
-	public static void setCallbacks() { // STAGE 2
-		for (ControlSet set : controlSets) {
-			GLFW.glfwSetKeyCallback(GlowTest.window.handle(), (w, k, sc, act, mods) -> set.handleKey(k, sc, act, mods));
-			GLFW.glfwSetMouseButtonCallback(GlowTest.window.handle(), (w, btn, act, mods) -> set.handleMouse(btn, act, mods));
-		}
 		
+		setCallbacksFor(uiControls);
 		GLFW.glfwSetCursorPosCallback(GlowTest.window.handle(), (hWin, x, y) -> mousePos.set((int) x, (int) y));
 	}
 	
-	public static class IterableControlSet extends ControlSet {
-		protected void pollAll() {
-			this.controls.values().iterator().forEachRemaining((control) -> {
-				if (control.isActive()) control.onPress().fire();
-			});
-		}
+	private static void setCallbacksFor(ControlSet... sets) {
+		System.out.println("Setting callbacks for " + Arrays.toString(sets));
+		GLFW.glfwSetKeyCallback(GlowTest.window.handle(), (window, key, scancode, action, mods) -> {
+			for (ControlSet set : sets) set.handleKey(key, scancode, action, mods);
+			System.out.println("Key " + GLFW.glfwGetKeyName(key, scancode) + "(" + key + ", " + scancode + ")"
+					+ (action == GLFW.GLFW_PRESS ? " pressed" : " released"));
+		});
+		GLFW.glfwSetMouseButtonCallback(GlowTest.window.handle(), (w, btn, act, mods) -> {
+			for (ControlSet set : sets) set.handleMouse(btn, act, mods);
+		});
 	}
 }
