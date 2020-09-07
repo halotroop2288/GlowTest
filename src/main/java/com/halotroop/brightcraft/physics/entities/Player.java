@@ -1,10 +1,10 @@
 package com.halotroop.brightcraft.physics.entities;
 
-import com.halotroop.brightcraft.Timer;
 import com.halotroop.brightcraft.config.controls.ControlsHandler;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.joml.Vector3d;
 
-public class Player extends VisibleEntity implements Timer.Tickable {
+public class Player extends VisibleEntity {
 	public static final double SPEED_FORWARD = 0.2;
 	public static final double SPEED_LIMIT = SPEED_FORWARD;
 	public static final double SPEED_STRAFE = SPEED_FORWARD * 0.75;
@@ -17,16 +17,9 @@ public class Player extends VisibleEntity implements Timer.Tickable {
 	
 	}
 	
-	@Override
-	public void tick() {
-	
-	}
-	
-	public void handleMovement(MovementDirection direction) {
+	public void handleMovement(@NonNull MovementDirection direction) {
+		System.out.println("HANDLING MOVEMENT " + direction.name().toUpperCase());
 		switch (direction) {
-			default: {
-				break;
-			}
 			case LEFT: {
 				Vector3d leftVec = ControlsHandler.mouseLook.getRightVector(null);
 				leftVec.mul(-Player.SPEED_STRAFE);
@@ -57,6 +50,9 @@ public class Player extends VisibleEntity implements Timer.Tickable {
 				}
 				
 				velocityVectorSum.add(lookVec);
+			}
+			default: {
+				break;
 			}
 		}
 	}

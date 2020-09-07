@@ -1,5 +1,17 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
+buildscript {
+    repositories {
+        maven { url 'https://plugins.gradle.org/m2/' }
+        maven { url 'https://maven.fabricmc.net/' }
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:6.0.0'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
 apply plugin: 'application'
 
@@ -13,32 +25,51 @@ repositories {
     maven { url "https://jitpack.io/" } // Github-only libraries
 }
 
-jar {
-    manifest {
-        attributes(
-                'Main-Class': 'com.halotroop.brightcraft.GlowTest'
-        )
-    }
-    exclude("**/com/halotroop/brightcraft/debug/")
-}
-
 dependencies {
-    compile       (files('README.md'))
+    shadow localGroovy()
+    shadow gradleApi()
+
+
+    compile      (files('README.md'))
     // Lightweight Java Game Library
-    compile lwjgl ('glfw', 'opengl', 'stb')
-    compile       ("org.joml:joml:1.9.12")
+    compile lwjgl('glfw', 'opengl', 'stb')
+    compile      ("org.joml:joml:1.9.22")
 
     // Google Libraries
-    compile       ("com.google.guava:guava:28.2-jre")
-    compile       ("com.google.code.findbugs:jsr305:3.0.2")
+    compile      ("com.google.guava:guava:28.2-jre")
+    compile      ("com.google.code.findbugs:jsr305:3.0.2")
 
-    // Game features supporting libraries
-    implementation("blue.endless:jankson:1.2.0") // Configuration save format
-    implementation("org.mongodb:bson:4.1.0") // World save format
-
-    implementation("com.github.falkreon:LibNoiseJava:260e0bb") // Noise generator
-    implementation("com.github.playsawdust:Glow:dfba54b")  // Render engine
+    [ // Game features supporting libraries
+            "blue.endless:jankson:1.2.0", // Configuration save format
+            "org.mongodb:bson:4.1.0", // World save format
+            "com.github.falkreon:LibNoiseJava:260e0bb", // Noise generator
+            "com.github.playsawdust:Glow:b9b074d"  // Render engine
+    ].each {lib ->
+        compile lib
+    }
 }
+
+jar {
+    manifest {
+        attributes ('Implementation-Title': archivesBaseName,
+                'Implementation-Version': getArchiveVersion(),
+                'Main-Class': 'com.halotroop.brightcraft.GlowTest',
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
+        )
+    }
+//    exclude("**/com/halotroop/brightcraft/debug/") // FIXME: Find a better way to do this.
+}
+
+shadowJar {
+    baseName('shadow')
+    classifier('')
+}
+
+task relocateShadowJar(type: ConfigureShadowRelocation) {
+    target = tasks.shadowJar
+}
+
+tasks.shadowJar.dependsOn tasks.relocateShadowJar
 
 def lwjgl(String... modules) {
     def ver = project.lwjgl_version

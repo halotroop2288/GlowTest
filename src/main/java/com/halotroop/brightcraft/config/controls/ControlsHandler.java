@@ -30,6 +30,7 @@ public class ControlsHandler {
 		inputGrabbed = !inputGrabbed;
 		GLFW.glfwSetInputMode(GlowTest.window.handle(), GLFW.GLFW_CURSOR,
 				inputGrabbed ? GLFW.GLFW_CURSOR_DISABLED : GLFW.GLFW_CURSOR_NORMAL);
+		inGameControls.setEnabled(inputGrabbed);
 	}
 	
 	/**
@@ -46,14 +47,16 @@ public class ControlsHandler {
 				GlowTest.player.velocityVectorSum.normalize().mul(CUR_SPEED_LIMIT);
 			}
 			
-			MotherRenderer.scene.getCamera().setPosition(GlowTest.player.velocityVectorSum.add(MotherRenderer.scene.getCamera().getPosition(null)));
+			MotherRenderer.scene.getCamera().setPosition(GlowTest.player.velocityVectorSum.add(
+					MotherRenderer.scene.getCamera().getPosition(null)));
 			
 			mouseLook.step(mousePos.x, mousePos.y, MotherRenderer.windowSize.x, MotherRenderer.windowSize.y);
 			MotherRenderer.scene.getCamera().setOrientation(ControlsHandler.mouseLook.getMatrix());
 			
 			Vector3d lookVec = ControlsHandler.mouseLook.getLookVector(null);
 			collision = new CollisionResult();
-			lookedAt = Collision.raycastVoxel(MotherRenderer.scene.getCamera().getPosition(null), lookVec, 100, GlowTest.chunkManager::getShape, collision, false);
+			lookedAt = Collision.raycastVoxel(MotherRenderer.scene.getCamera().getPosition(null), lookVec, 100,
+					GlowTest.chunkManager::getShape, collision, false);
 			if (lookedAt != null) {
 				//lookTargetActor.setPosition(collision.getHitLocation());
 				Actors.lookTargetActor.setPosition(collision.getVoxelCenter(null));
@@ -61,10 +64,12 @@ public class ControlsHandler {
 				Vector3d hitNormal = collision.getHitNormal();
 				Actors.lookTargetActor.lookAlong(hitNormal.x, hitNormal.y, hitNormal.z);
 				MotherRenderer.scene.forEach(actor -> {
-					if (actor.equals(Actors.lookTargetActor)) MotherRenderer.scene.addActor(Actors.lookTargetActor);
+					if (actor.equals(Actors.lookTargetActor)) {
+						Actors.lookTargetActor.setRenderModel(Actors.getModel(Actors.lookTargetActor));
+					}
 				});
 			} else {
-				MotherRenderer.scene.removeActor(Actors.lookTargetActor);
+				Actors.lookTargetActor.setRenderModel(null);
 			}
 		}
 	}
@@ -119,11 +124,19 @@ public class ControlsHandler {
 				}
 			}
 		});
-		
-		setCallbacksFor(uiControls);
+	}
+	
+	public static void setCallbacks() {
+		setCallbacksFor(uiControls, inGameControls);
+		inGameControls.setEnabled(false);
 		GLFW.glfwSetCursorPosCallback(GlowTest.window.handle(), (hWin, x, y) -> mousePos.set((int) x, (int) y));
 	}
 	
+	/**
+	 * Adds key and mouse button callbacks for the given list of ControlSets
+	 *
+	 * @param sets ControlSets to be added to the GLFW callbacks
+	 */
 	private static void setCallbacksFor(ControlSet... sets) {
 		System.out.println("Setting callbacks for " + Arrays.toString(sets));
 		GLFW.glfwSetKeyCallback(GlowTest.window.handle(), (window, key, scancode, action, mods) -> {

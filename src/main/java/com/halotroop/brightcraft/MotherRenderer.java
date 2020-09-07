@@ -28,7 +28,7 @@ public class MotherRenderer {
 	public static boolean windowSizeDirty = false;
 	public static Vector2i windowSize = new Vector2i();
 	public static Scene scene = new Scene();
-	public static RenderScheduler scheduler = RenderScheduler.createDefaultScheduler();
+	public static RenderScheduler scheduler;
 	public static int fps;
 	static ShaderProgram solidShaderProg;
 	
@@ -99,6 +99,7 @@ public class MotherRenderer {
 	public static void setupStage2() throws IOException, ShaderError { // STAGE 2
 		GLFW.glfwMakeContextCurrent(GlowTest.window.handle());
 		GL.createCapabilities();
+		scheduler = RenderScheduler.createDefaultScheduler();
 		
 		GLFW.glfwSetFramebufferSizeCallback(GlowTest.window.handle(), (hWin, width, height) -> {
 			windowSizeDirty = true;

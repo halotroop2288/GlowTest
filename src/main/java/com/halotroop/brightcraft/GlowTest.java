@@ -16,14 +16,17 @@ public class GlowTest {
 	public static Player player = new Player();
 	
 	public static void main(String... args) {
-		MotherRenderer.initWindow();
 		ControlsHandler.mapControls();
+		MotherRenderer.initWindow();
+		ControlsHandler.setCallbacks();
+		
 		
 		try {
-			DebugControls.mapDebugControls();
-		} catch (ClassNotFoundException e) {
+			Class.forName("com.halotroop.brightcraft.debug.DebugControls");
+		} catch (NoClassDefFoundError | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+		DebugControls.mapDebugControls();
 		
 		
 		try {

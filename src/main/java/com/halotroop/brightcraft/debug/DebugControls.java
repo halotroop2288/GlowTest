@@ -17,7 +17,7 @@ public class DebugControls {
 	private static DigitalButtonControl debugF1, debugF2, debugF3, debugF4, debugF5, debugF6, debugF7, debugF8, debugF9,
 			debugF10, debugF11, debugF12;
 	
-	public static void mapDebugControls() throws ClassNotFoundException {
+	public static void mapDebugControls() {
 		System.out.println("Hewwo world!");
 		debugF1 = debugControls.map("debug_f1", GLFW.GLFW_KEY_F1);
 		debugF2 = debugControls.map("debug_f2", GLFW.GLFW_KEY_F2);
