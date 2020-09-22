@@ -51,7 +51,7 @@ public class Blocks {
 		MasterRenderer.loadTexture("orangeDiffuse", "block_face_orange");
 		MasterRenderer.loadTexture("stoneDiffuse", "stone");
 		MasterRenderer.loadTexture("grassDiffuse", "grass");
-		MasterRenderer.loadTexture("grassDiffuse " , "sand" );
+		MasterRenderer.loadTexture("grassDiffuse " , "slime_ore" );
 
 	}
 }
