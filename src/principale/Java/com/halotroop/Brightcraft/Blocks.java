@@ -42,7 +42,7 @@ public class Blocks {
 			.setShape(VoxelShape.CUBE)
 			.setMaterial(MATERIAL_GRASS);
 	
-	public static final Block BLOCK_STONE = new Block()
+	public static final Block BLOCK_SLIME = new Block()
 			.setShape(VoxelShape.CUBE)
 			.setMaterial(SLIME_ORE);
 	
