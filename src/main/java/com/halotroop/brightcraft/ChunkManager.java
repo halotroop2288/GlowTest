@@ -46,6 +46,7 @@ public class ChunkManager implements Destroyable {
 	private static void generateInto(Chunk chunk) {
 		//Preload the palette
 		chunk.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
+		chunk.setBlock(0, 0, 0, Blocks.SLIME_BLOCK);
 		chunk.setBlock(0, 0, 0, Blocks.BLOCK_STONE);
 		chunk.setBlock(0, 0, 0, Blocks.BLOCK_GRASS);
 		chunk.setBlock(0, 0, 0, Blocks.BLOCK_AIR);
